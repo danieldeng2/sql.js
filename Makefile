@@ -6,9 +6,8 @@
 
 # I got this handy makefile syntax from : https://github.com/mandel59/sqlite-wasm (MIT License) Credited in LICENSE
 # To use another version of Sqlite, visit https://www.sqlite.org/download.html and copy the appropriate values here:
-SQLITE_AMALGAMATION = sqlite-amalgamation-3390300
-SQLITE_AMALGAMATION_ZIP_URL = https://www.sqlite.org/2022/sqlite-amalgamation-3390300.zip
-SQLITE_AMALGAMATION_ZIP_SHA3 = 6a83b7da4b73d7148364a0033632ae1e4f9d647417e6f3654a5d0afe8424bbb9
+SQLITE_AMALGAMATION = sqlite-amalgamation
+SQLITE_BUILD_PATH = ../sqlite/build
 
 # Note that extension-functions.c hasn't been updated since 2010-02-06, so likely doesn't need to be updated
 EXTENSION_FUNCTIONS = extension-functions.c
@@ -158,10 +157,6 @@ out/extension-functions.bc: sqlite-src/$(SQLITE_AMALGAMATION)
 # 	tar --create --gzip $^ > $@
 
 ## cache
-cache/$(SQLITE_AMALGAMATION).zip:
-	mkdir -p cache
-	curl -LsSf '$(SQLITE_AMALGAMATION_ZIP_URL)' -o $@
-
 cache/$(EXTENSION_FUNCTIONS):
 	mkdir -p cache
 	curl -LsSf '$(EXTENSION_FUNCTIONS_URL)' -o $@
@@ -170,15 +165,9 @@ cache/$(EXTENSION_FUNCTIONS):
 .PHONY: sqlite-src
 sqlite-src: sqlite-src/$(SQLITE_AMALGAMATION) sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
 
-sqlite-src/$(SQLITE_AMALGAMATION): cache/$(SQLITE_AMALGAMATION).zip sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
-	mkdir -p sqlite-src/$(SQLITE_AMALGAMATION)
-	echo '$(SQLITE_AMALGAMATION_ZIP_SHA3)  ./cache/$(SQLITE_AMALGAMATION).zip' > cache/check.txt
-	sha3sum -a 256 -c cache/check.txt
-	# We don't delete the sqlite_amalgamation folder. That's a job for clean
-	# Also, the extension functions get copied here, and if we get the order of these steps wrong,
-	# this step could remove the extension functions, and that's not what we want
-	unzip -u 'cache/$(SQLITE_AMALGAMATION).zip' -d sqlite-src/
-	touch $@
+sqlite-src/$(SQLITE_AMALGAMATION): sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
+	mkdir -p $@
+	echo "run ./export.sh from sqlite repository"
 
 sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS): cache/$(EXTENSION_FUNCTIONS)
 	mkdir -p sqlite-src/$(SQLITE_AMALGAMATION)
@@ -190,4 +179,3 @@ sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS): cache/$(EXTENSION_FUNC
 .PHONY: clean
 clean:
 	rm -f out/* dist/* cache/*
-	rm -rf sqlite-src/
