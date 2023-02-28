@@ -4,15 +4,23 @@
 <script>
   config = {
     locateFile: (filename, prefix) => {
-      console.log(`prefix is : ${prefix}`);
       return `../dist/${filename}`;
     }
   }
+
+  async function add_just_in_time(db, num1, num2){
+    var jit_add = db.jit_add();
+    const m = await WebAssembly.compile(jit_add);
+    const instance = await WebAssembly.instantiate(m, {});
+    return instance.exports.add(num1, num2);
+  }
+
   // The `initSqlJs` function is globally provided by all of the main dist files if loaded in the browser.
   // We must specify this locateFile function if we are loading a wasm file from anywhere other than the current html page's folder.
-  initSqlJs(config).then(function (SQL) {
+  initSqlJs(config).then(async function (SQL) {
     //Create the database
     var db = new SQL.Database();
+    console.log(await add_just_in_time(db, 14, 2));
     // Run a query without reading the results
     db.run("CREATE TABLE test (col1, col2);");
     // Insert two rows: (1,111) and (2,222)

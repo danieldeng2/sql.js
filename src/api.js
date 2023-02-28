@@ -238,7 +238,18 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         "number",
         ["number"]
     );
+    
+    var jit_add = cwrap(
+        "jit_add",
+        "number",
+        []
+    )
 
+    var jit_add_len = cwrap(
+        "jit_add_len",
+        "number",
+        []
+    )
     /**
     * @classdesc
     * Represents a prepared statement.
@@ -321,6 +332,7 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
     * @return {boolean} true if it worked
     * @throws {String} SQLite Error
     */
+
     Statement.prototype["bind"] = function bind(values) {
         if (!this.stmt) {
             throw "Statement closed";
@@ -1376,6 +1388,13 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         ));
         return this;
     };
+
+    Database.prototype["jit_add"] = function () {
+        const wasm = jit_add();
+        const wasm_len = jit_add_len();
+        const wasm_data = new Uint8Array(Module.HEAP8.buffer, wasm, wasm_len);
+        return wasm_data;
+    }
 
     // export Database to Module
     Module.Database = Database;
