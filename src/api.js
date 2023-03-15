@@ -238,17 +238,23 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         "number",
         ["number"]
     );
-    
-    var jit_add = cwrap(
-        "jit_add",
+
+    var jitModule = cwrap(
+        "jitModule",
         "number",
         []
     )
-
-    var jit_add_len = cwrap(
-        "jit_add_len",
+    
+    var moduleData = cwrap(
+        "moduleData",
         "number",
-        []
+        ["number"]
+    )
+
+    var moduleSize = cwrap(
+        "moduleSize",
+        "number",
+        ["number"]
     )
     /**
     * @classdesc
@@ -693,6 +699,10 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         return res;
     };
 
+
+    Statement.prototype.jitModule = jitModule;
+    Statement.prototype.moduleData = moduleData;
+    Statement.prototype.moduleSize = moduleSize;
     /**
      * @classdesc
      * An iterator over multiple SQL statements in a string,
@@ -1388,13 +1398,6 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         ));
         return this;
     };
-
-    Database.prototype["jit_add"] = function () {
-        const wasm = jit_add();
-        const wasm_len = jit_add_len();
-        const wasm_data = new Uint8Array(Module.HEAP8.buffer, wasm, wasm_len);
-        return wasm_data;
-    }
 
     // export Database to Module
     Module.Database = Database;

@@ -43,6 +43,8 @@
 "_sqlite3_result_error",
 "_sqlite3_aggregate_context",
 "_RegisterExtensionFunctions",
-"_jit_add", 
-"_jit_add_len"
+"_jitModule", 
+"_moduleData", 
+"_moduleSize",
+"_freeModule"
 ]

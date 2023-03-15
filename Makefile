@@ -23,7 +23,8 @@ SQLITE_COMPILATION_FLAGS = \
 	-DSQLITE_ENABLE_FTS3 \
 	-DSQLITE_ENABLE_FTS3_PARENTHESIS \
 	-DSQLITE_THREADSAFE=0 \
-	-DSQLITE_ENABLE_NORMALIZE
+	-DSQLITE_ENABLE_NORMALIZE \
+	-DSQLITE_JIT
 
 # When compiling to WASM, enabling memory-growth is not expected to make much of an impact, so we enable it for all builds
 # Since tihs is a library and not a standalone executable, we don't want to catch unhandled Node process exceptions
@@ -47,7 +48,9 @@ EMFLAGS_ASM_MEMORY_GROWTH = \
 
 EMFLAGS_WASM = \
 	-s WASM=1 \
-	-s ALLOW_MEMORY_GROWTH=1
+	-s ALLOW_MEMORY_GROWTH=1 \
+	-Wl,--growable-table \
+	-Wl,--export-table
 
 EMFLAGS_OPTIMIZED= \
 	-Oz \

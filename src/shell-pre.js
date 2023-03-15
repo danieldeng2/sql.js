@@ -42,7 +42,6 @@ var initSqlJs = function (moduleConfig) {
               originalOnAbortFunction(errorThatCausedAbort);
             }
         };
-
         Module['postRun'] = Module['postRun'] || [];
         Module['postRun'].push(function () {
             // When Emscripted calls postRun, this promise resolves with the built Module
