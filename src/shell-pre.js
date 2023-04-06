@@ -42,6 +42,49 @@ var initSqlJs = function (moduleConfig) {
               originalOnAbortFunction(errorThatCausedAbort);
             }
         };
+        
+        function arrayBufferToBase64(arraybuffer, fileName) {
+          let binary = '';
+          const bytes = new Uint8Array(arraybuffer);
+          const len = bytes.byteLength;
+          for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          const file = window.btoa(binary);
+          const url = `data:application/wasm;base64,` + file;
+            
+          // download the file
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+        }
+
+        Module['jitCompile'] = function (saveFileName = null) {
+          const asm = Module["asm"];
+          const ptr = asm.jitModule();
+          if (!ptr) {
+            return;
+          }
+          const data = asm.moduleData(ptr);
+          const size = asm.moduleSize(ptr);
+          const memory = asm.memory;
+          const __indirect_function_table = asm.__indirect_function_table;
+          const bytes = memory.buffer.slice(data, data + size);
+          asm.freeModule(ptr);
+
+          if (saveFileName){
+            arrayBufferToBase64(bytes, saveFileName);
+          }
+
+          const mod = new WebAssembly.Module(bytes);
+          const imports = { env: { memory, __indirect_function_table } };
+          new WebAssembly.Instance(mod, imports);
+        }
+
         Module['postRun'] = Module['postRun'] || [];
         Module['postRun'].push(function () {
             // When Emscripted calls postRun, this promise resolves with the built Module

@@ -8,23 +8,6 @@
     }
   }
 
-  function jit(Module) {
-    const asm = Module["asm"];
-    let ptr = asm.jitModule();
-    if (!ptr) {
-      return;
-    }
-    let data = asm.moduleData(ptr);
-    let size = asm.moduleSize(ptr);
-    let memory = asm.memory;
-    let __indirect_function_table = asm.__indirect_function_table;
-    let bytes = memory.buffer.slice(data, data + size);
-    asm.freeModule(ptr);
-    let mod = new WebAssembly.Module(bytes);
-    let imports = { env: { memory, __indirect_function_table } };
-    new WebAssembly.Instance(mod, imports);
-  }
-
   initSqlJs(config).then(async function (SQL) {
     const db = new SQL.Database();
     db.run("CREATE TABLE IF NOT EXISTS tbl (x PRIMARY KEY, y);");
@@ -33,7 +16,8 @@
     const stmt = db.prepare("SELECT y + y FROM tbl");
 
     while (stmt.step()) {
-      jit(SQL);
+      // SQL.jitCompile("jit.wasm");
+      SQL.jitCompile();
       var row = stmt.getAsObject();
       console.log('Here is a row: ' + JSON.stringify(row));
     }
