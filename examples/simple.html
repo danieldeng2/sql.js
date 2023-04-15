@@ -1,31 +1,62 @@
 <meta charset="utf8" />
 <html>
 <script src='../dist/sql-wasm-debug.js'></script>
-<script>
-  config = {
-    locateFile: (filename, prefix) => {
-      return `../dist/${filename}`;
-    }
+<script defer>
+  function valconcat(vals, tagName) {
+    if (vals.length === 0) return '';
+    var open = '<' + tagName + '>', close = '</' + tagName + '>';
+    return open + vals.join(close + open) + close;
   }
 
-  initSqlJs(config).then(async function (SQL) {
-    const db = new SQL.Database();
-    db.run("CREATE TABLE IF NOT EXISTS tbl (x PRIMARY KEY, y);");
-    db.run("REPLACE INTO tbl VALUES ('first', 6), ('second', 7), ('third', 8);");
+  window.onload = async () => {
+    const dbFileElm = document.getElementById('dbfile');
+    const outputElm = document.getElementById('output');
+    const outputTableHeadElem = document.getElementById('outputTableHead');
+    const outputTableBodyElem = document.getElementById('outputTableBody');
+    const executeButton = document.getElementById('execute');
 
-    const stmt = db.prepare("SELECT y + y FROM tbl");
-
-    while (stmt.step()) {
-      // SQL.jitCompile("jit.wasm");
-      SQL.jitCompile();
-      var row = stmt.getAsObject();
-      console.log('Here is a row: ' + JSON.stringify(row));
+    const SQL = await initSqlJs({
+      locateFile: (filename, prefix) => {
+        return `../dist/${filename}`;
+      }
+    });
+    executeButton.onclick = () => {
+      const f = dbFileElm.files[0];
+      const r = new FileReader();
+      r.onload = function () {
+        const Uints = new Uint8Array(r.result);
+        const db = new SQL.Database(Uints);
+        const stmt = db.prepare("SELECT L_LINENUMBER + 1 FROM lineitem LIMIT 10;");
+        outputTableHeadElem.innerHTML = "";
+        outputTableBodyElem.innerHTML = "";
+        let tableBody = "";
+        while (stmt.step()) {
+          SQL.jitCompile("test.wasm");
+          const columnNames = stmt.getColumnNames();
+          const row = stmt.get();
+          outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');
+          tableBody += `<tr>${valconcat(row, 'td')}</tr>`;
+        };
+        outputTableBodyElem.innerHTML = tableBody;
+      }
+      r.readAsArrayBuffer(f);
     }
-  });
+  };
 </script>
 
 <body>
-  Output is in Javscript console
+  <label class="button">Load an SQLite database file: <input type='file' id='dbfile'></label>
+  <br>
+  <button id="execute" class="button">Execute</button>
+  <br>
+  <table>
+    <thead id="outputTableHead">
+      <th>
+        Outputs will appear here.
+      </th>
+    <tbody id="outputTableBody"></tbody>
+    </thead>
+  </table>
 </body>
 
 </html>
