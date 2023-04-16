@@ -72,7 +72,11 @@ var initSqlJs = function (moduleConfig) {
           const data = asm.moduleData(ptr);
           const size = asm.moduleSize(ptr);
           const memory = asm.memory;
+          const stackSave = asm.stackSave;
+          const stackAlloc = asm.stackAlloc;
+          const stackRestore = asm.stackRestore;
           const __indirect_function_table = asm.__indirect_function_table;
+
           const bytes = memory.buffer.slice(data, data + size);
           asm.freeModule(ptr);
 
@@ -81,7 +85,13 @@ var initSqlJs = function (moduleConfig) {
           }
 
           const mod = new WebAssembly.Module(bytes);
-          const imports = { env: { memory, __indirect_function_table } };
+          const imports = { env: { 
+            memory, 
+            __indirect_function_table, 
+            stackSave, 
+            stackAlloc, 
+            stackRestore 
+          } };
           new WebAssembly.Instance(mod, imports);
         }
 
