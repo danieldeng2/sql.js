@@ -30,8 +30,8 @@
         outputTableHeadElem.innerHTML = "";
         outputTableBodyElem.innerHTML = "";
         let tableBody = "";
+        stmt.jit("test.wasm");
         while (stmt.step()) {
-          SQL.jitCompile("test.wasm");
           const columnNames = stmt.getColumnNames();
           const row = stmt.get();
           outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');

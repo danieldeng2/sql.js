@@ -63,9 +63,9 @@ var initSqlJs = function (moduleConfig) {
           window.URL.revokeObjectURL(url);
         }
 
-        Module['jitCompile'] = function (saveFileName = null) {
+        Module['jitStatement'] = function (stmt, saveFileName = null) {
           const asm = Module["asm"];
-          const ptr = asm.jitModule();
+          const ptr = asm.jitStatement(stmt);
           if (!ptr) {
             return;
           }

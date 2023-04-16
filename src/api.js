@@ -239,23 +239,6 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         ["number"]
     );
 
-    var jitModule = cwrap(
-        "jitModule",
-        "number",
-        []
-    )
-    
-    var moduleData = cwrap(
-        "moduleData",
-        "number",
-        ["number"]
-    )
-
-    var moduleSize = cwrap(
-        "moduleSize",
-        "number",
-        ["number"]
-    )
     /**
     * @classdesc
     * Represents a prepared statement.
@@ -338,6 +321,10 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
     * @return {boolean} true if it worked
     * @throws {String} SQLite Error
     */
+
+    Statement.prototype["jit"] = function jit(saveFileName = null) {
+        Module.jitStatement(this.stmt, saveFileName);
+    }
 
     Statement.prototype["bind"] = function bind(values) {
         if (!this.stmt) {
@@ -699,10 +686,6 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         return res;
     };
 
-
-    Statement.prototype.jitModule = jitModule;
-    Statement.prototype.moduleData = moduleData;
-    Statement.prototype.moduleSize = moduleSize;
     /**
      * @classdesc
      * An iterator over multiple SQL statements in a string,
