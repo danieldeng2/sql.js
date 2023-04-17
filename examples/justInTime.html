@@ -1,0 +1,74 @@
+<meta charset="utf8" />
+<html>
+<script src='../dist/sql-wasm-debug.js'></script>
+<script defer>
+  function valconcat(vals, tagName) {
+    if (vals.length === 0) return '';
+    var open = '<' + tagName + '>', close = '</' + tagName + '>';
+    return open + vals.join(close + open) + close;
+  }
+
+  window.onload = async () => {
+    const dbFileElm = document.getElementById('dbfile');
+    const outputElm = document.getElementById('output');
+    const outputTableHeadElem = document.getElementById('outputTableHead');
+    const outputTableBodyElem = document.getElementById('outputTableBody');
+    const executeButton = document.getElementById('execute');
+
+    const SQL = await initSqlJs({
+      locateFile: (filename, prefix) => {
+        return `../dist/${filename}`;
+      }
+    });
+    executeButton.onclick = () => {
+      const f = dbFileElm.files[0];
+      const r = new FileReader();
+      r.onload = function () {
+        const Uints = new Uint8Array(r.result);
+        const db = new SQL.Database(Uints);
+        const stmt = db.prepare(`SELECT
+    sum(l_extendedprice * l_discount) as revenue
+FROM
+    lineitem
+WHERE
+    l_shipdate >= DATE('1994-01-01')
+    AND l_shipdate < DATE('1994-01-01', '+1 years')
+    AND l_discount between 0.06 - 0.01 AND 0.06 + 0.01
+    AND l_quantity < 24;`);
+        outputTableHeadElem.innerHTML = "";
+        outputTableBodyElem.innerHTML = "";
+        let tableBody = "";
+        stmt.jit();
+        while (stmt.step()) {
+          const columnNames = stmt.getColumnNames();
+          const row = stmt.get();
+          outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');
+          tableBody += `<tr>${valconcat(row, 'td')}</tr>`;
+        };
+        outputTableBodyElem.innerHTML = tableBody;
+      }
+      r.readAsArrayBuffer(f);
+    }
+  };
+</script>
+
+<head>
+  <title>JustInTime</title>
+</head>
+
+<body>
+  <label class="button">Load an SQLite database file: <input type='file' id='dbfile'></label>
+  <br>
+  <button id="execute" class="button">Execute</button>
+  <br>
+  <table>
+    <thead id="outputTableHead">
+      <th>
+        Outputs will appear here.
+      </th>
+    <tbody id="outputTableBody"></tbody>
+    </thead>
+  </table>
+</body>
+
+</html>

@@ -26,11 +26,18 @@
       r.onload = function () {
         const Uints = new Uint8Array(r.result);
         const db = new SQL.Database(Uints);
-        const stmt = db.prepare("SELECT L_LINENUMBER + 1 FROM lineitem LIMIT 10;");
+        const stmt = db.prepare(`SELECT
+    sum(l_extendedprice * l_discount) as revenue
+FROM
+    lineitem
+WHERE
+    l_shipdate >= DATE('1994-01-01')
+    AND l_shipdate < DATE('1994-01-01', '+1 years')
+    AND l_discount between 0.06 - 0.01 AND 0.06 + 0.01
+    AND l_quantity < 24;`);
         outputTableHeadElem.innerHTML = "";
         outputTableBodyElem.innerHTML = "";
         let tableBody = "";
-        stmt.jit("test.wasm");
         while (stmt.step()) {
           const columnNames = stmt.getColumnNames();
           const row = stmt.get();
@@ -43,6 +50,10 @@
     }
   };
 </script>
+
+<head>
+  <title>Reference</title>
+</head>
 
 <body>
   <label class="button">Load an SQLite database file: <input type='file' id='dbfile'></label>
