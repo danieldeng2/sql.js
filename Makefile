@@ -19,6 +19,7 @@ EMCC=emcc
 SQLITE_COMPILATION_FLAGS = \
 	-O1 \
 	-g \
+	-I../binaryen/src \
 	-DSQLITE_OMIT_LOAD_EXTENSION \
 	-DSQLITE_DISABLE_LFS \
 	-DSQLITE_ENABLE_FTS3 \
@@ -31,6 +32,7 @@ SQLITE_COMPILATION_FLAGS = \
 # Since tihs is a library and not a standalone executable, we don't want to catch unhandled Node process exceptions
 # So, we do : `NODEJS_CATCH_EXIT=0`, which fixes issue: https://github.com/sql-js/sql.js/issues/173 and https://github.com/sql-js/sql.js/issues/262
 EMFLAGS = \
+	-L../binaryen/lib -lbinaryen \
 	--memory-init-file 0 \
 	-s RESERVED_FUNCTION_POINTERS=64 \
 	-s ALLOW_TABLE_GROWTH=1 \
