@@ -63,7 +63,7 @@ EMFLAGS_DEBUG = \
 	-g \
 	-O1
 
-BITCODE_FILES = out/sqlite3.bc out/extension-functions.bc out/vdbeCompiler.bc
+BITCODE_FILES = out/sqlite3.o out/extension-functions.o out/vdbeCompiler.o out/vdbeRuntime.o
 
 OUTPUT_WRAPPER_FILES = src/shell-pre.js src/shell-post.js
 
@@ -146,21 +146,24 @@ dist/worker.sql-wasm-debug.js: dist/sql-wasm-debug.js src/worker.js
 # 	#mv out/sql-wasm-debug.wasm dist/sql-wasm-debug.wasm
 # 	rm out/tmp-raw.js
 
-out/sqlite3.bc: sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c
+out/sqlite3.o: sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c
 	mkdir -p out
 	# Generate llvm bitcode
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c -o $@
 
 # Since the extension-functions.c includes other headers in the sqlite_amalgamation, we declare that this depends on more than just extension-functions.c
-out/extension-functions.bc: sqlite-src/$(SQLITE_AMALGAMATION)/extension-functions.c
+out/extension-functions.o: sqlite-src/$(SQLITE_AMALGAMATION)/extension-functions.c
 	mkdir -p out
 	# Generate llvm bitcode
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/extension-functions.c -o $@
 
-out/vdbeCompiler.bc: sqlite-src/$(SQLITE_AMALGAMATION)/vdbeCompiler.cc
+out/vdbeCompiler.o: sqlite-src/$(SQLITE_AMALGAMATION)/vdbeCompiler.cc
 	mkdir -p out
-	# Generate llvm bitcode
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/vdbeCompiler.cc -o $@
+
+out/vdbeRuntime.o: sqlite-src/$(SQLITE_AMALGAMATION)/vdbeRuntime.c
+	mkdir -p out
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/vdbeRuntime.c -o $@
 
 # TODO: This target appears to be unused. If we re-instatate it, we'll need to add more files inside of the JS folder
 # module.tar.gz: test package.json AUTHORS README.md dist/sql-asm.js
