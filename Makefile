@@ -6,8 +6,8 @@
 
 # I got this handy makefile syntax from : https://github.com/mandel59/sqlite-wasm (MIT License) Credited in LICENSE
 # To use another version of Sqlite, visit https://www.sqlite.org/download.html and copy the appropriate values here:
-SQLITE_AMALGAMATION = sqlite-amalgamation
-SQLITE_BUILD_PATH = ../sqlite/build
+SQLITE_BUILD_PATH = ../sqlite/container-build
+SQLITE_SRC_PATH = ../sqlite/src
 
 # Note that extension-functions.c hasn't been updated since 2010-02-06, so likely doesn't need to be updated
 EXTENSION_FUNCTIONS = extension-functions.c
@@ -63,7 +63,7 @@ EMFLAGS_DEBUG = \
 	-g \
 	-O1
 
-BITCODE_FILES = out/sqlite3.o out/extension-functions.o out/compiler.o out/runtime.o out/operations.o
+BITCODE_FILES = out/sqlite3.o out/extension-functions.o out/compiler.o out/runtime.o out/operations.o out/analysis.o
 
 OUTPUT_WRAPPER_FILES = src/shell-pre.js src/shell-post.js
 
@@ -146,53 +146,43 @@ dist/worker.sql-wasm-debug.js: dist/sql-wasm-debug.js src/worker.js
 # 	#mv out/sql-wasm-debug.wasm dist/sql-wasm-debug.wasm
 # 	rm out/tmp-raw.js
 
-out/sqlite3.o: sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c
+out/sqlite3.o: $(SQLITE_BUILD_PATH)/sqlite3.c
 	mkdir -p out
 	# Generate llvm bitcode
-	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/sqlite3.c -o $@
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c $^ -o $@
 
 # Since the extension-functions.c includes other headers in the sqlite_amalgamation, we declare that this depends on more than just extension-functions.c
-out/extension-functions.o: sqlite-src/$(SQLITE_AMALGAMATION)/extension-functions.c
+out/extension-functions.o: sqlite-src/$(EXTENSION_FUNCTIONS)
 	mkdir -p out
-	# Generate llvm bitcode
-	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/extension-functions.c -o $@
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
-out/compiler.o: sqlite-src/$(SQLITE_AMALGAMATION)/compiler.cc
+out/compiler.o: $(SQLITE_SRC_PATH)/vdbeJIT/compiler.cc
 	mkdir -p out
-	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/compiler.cc -o $@
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
-out/runtime.o: sqlite-src/$(SQLITE_AMALGAMATION)/runtime.c
+out/runtime.o: $(SQLITE_SRC_PATH)/vdbeJIT/runtime.c
 	mkdir -p out
-	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/runtime.c -o $@
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
-out/operations.o: sqlite-src/$(SQLITE_AMALGAMATION)/operations.cc
+out/operations.o: $(SQLITE_SRC_PATH)/vdbeJIT/operations.cc
 	mkdir -p out
-	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -c sqlite-src/$(SQLITE_AMALGAMATION)/operations.cc -o $@
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
-# TODO: This target appears to be unused. If we re-instatate it, we'll need to add more files inside of the JS folder
-# module.tar.gz: test package.json AUTHORS README.md dist/sql-asm.js
-# 	tar --create --gzip $^ > $@
+out/analysis.o: $(SQLITE_SRC_PATH)/vdbeJIT/analysis.cc
+	mkdir -p out
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
 ## cache
 cache/$(EXTENSION_FUNCTIONS):
 	mkdir -p cache
 	curl -LsSf '$(EXTENSION_FUNCTIONS_URL)' -o $@
 
-## sqlite-src
-.PHONY: sqlite-src
-sqlite-src: sqlite-src/$(SQLITE_AMALGAMATION) sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
-
-sqlite-src/$(SQLITE_AMALGAMATION): sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS)
-	mkdir -p $@
-	echo "run ./export.sh from sqlite repository"
-
-sqlite-src/$(SQLITE_AMALGAMATION)/$(EXTENSION_FUNCTIONS): cache/$(EXTENSION_FUNCTIONS)
-	mkdir -p sqlite-src/$(SQLITE_AMALGAMATION)
+sqlite-src/$(EXTENSION_FUNCTIONS): cache/$(EXTENSION_FUNCTIONS)
+	mkdir -p sqlite-src
 	echo '$(EXTENSION_FUNCTIONS_SHA1)  ./cache/$(EXTENSION_FUNCTIONS)' > cache/check.txt
 	sha1sum -c cache/check.txt
 	cp 'cache/$(EXTENSION_FUNCTIONS)' $@
 
-
 .PHONY: clean
 clean:
-	rm -f out/* dist/* cache/*
+	rm -f out/* dist/*
