@@ -1,0 +1,26 @@
+<meta charset="utf8" />
+<html>
+
+<head>
+  <title>Benchmark</title>
+</head>
+
+<body>
+  <script src='../../dist/sql-wasm-debug.js'></script>
+  <script defer type="module" src="script.js"></script>
+
+  <label class="button">Load TPC-H file: <input type='file' id='dbfile'></label>
+  <br>
+  <button id="execute" class="button">Execute</button>
+  <br>
+  <table>
+    <thead id="outputTableHead">
+      <th id="outputNotice">
+        Outputs will appear here.
+      </th>
+    <tbody id="outputTableBody"></tbody>
+    </thead>
+  </table>
+</body>
+
+</html>
