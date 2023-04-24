@@ -36,7 +36,6 @@
         const db = new SQL.Database(Uints);
         const stmt = db.prepare(queries["Query 18"]);
         outputTableBodyElem.innerHTML = "";
-        stmt.jit();
         while (stmt.step()) {
           const columnNames = stmt.getColumnNames();
           const row = stmt.get();

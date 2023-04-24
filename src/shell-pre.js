@@ -63,7 +63,52 @@ var initSqlJs = function (moduleConfig) {
           window.URL.revokeObjectURL(url);
         }
 
-        Module['jitStatement'] = function (stmt, saveFileName = null) {
+        function genImportEnv(asm){
+          return {
+            memory: asm.memory, 
+            __indirect_function_table: asm.__indirect_function_table, 
+            stackSave: asm.stackSave,
+            stackAlloc: asm.stackAlloc, 
+            stackRestore: asm.stackRestore,
+            sqlite3InMemSorterInit: asm.sqlite3InMemSorterInit,
+            sqlite3BtreeBeginTrans: asm.sqlite3BtreeBeginTrans,
+            execOpenReadWrite: asm.execOpenReadWrite,
+            execOpRewind: asm.execOpRewind,
+            sqlite3VdbeMemShallowCopy: asm.sqlite3VdbeMemShallowCopy,
+            sqlite3MemCompare: asm.sqlite3MemCompare,
+            sqlite3VdbeMemAggValue: asm.sqlite3VdbeMemAggValue,
+            sqlite3VdbeMemFinalize: asm.sqlite3VdbeMemFinalize,
+            sqlite3VdbeChangeEncoding: asm.sqlite3VdbeChangeEncoding,
+            execOpColumn: asm.execOpColumn,
+            execOpFunction: asm.execOpFunction,
+            execOpAdd: asm.execOpAdd,
+            execOpSubtract: asm.execOpSubtract,
+            execOpMultiply: asm.execOpMultiply,
+            execOpMakeRecord: asm.execOpMakeRecord,
+            execAggrStepOne: asm.execAggrStepOne,
+            sqlite3BtreeNext: asm.sqlite3BtreeNext,
+            sqlite3InMemSorterNext: asm.sqlite3InMemSorterNext,
+            sqlite3InMemSorterWrite: asm.sqlite3InMemSorterWrite,
+            allocateCursor: asm.allocateCursor,
+            sqlite3InMemSorterRowkey: asm.sqlite3InMemSorterRowkey,
+            execOpCompare: asm.execOpCompare,
+            execOpMove: asm.execOpMove,
+            sqlite3VdbeMemMove: asm.sqlite3VdbeMemMove,
+            execDeferredSeek: asm.execDeferredSeek,
+            execSeekRowid: asm.execSeekRowid,
+            execOpRowid: asm.execOpRowid,
+            execOpAffinity: asm.execOpAffinity,
+            execSeekComparisons: asm.execSeekComparisons,
+            sqlite3VdbeMemCast: asm.sqlite3VdbeMemCast,
+            execOpOpenEphemeral: asm.execOpOpenEphemeral,
+            execOpNullRow: asm.execOpNullRow,
+            execOpIdxInsert: asm.execOpIdxInsert,
+            sqlite3BtreeInsert: asm.sqlite3BtreeInsert,
+            execIdxComparisons: asm.execIdxComparisons,
+          }
+        }
+
+        Module['jitStatement'] = async function (stmt, saveFileName = null) {
           const asm = Module["asm"];
           const ptr = asm.jitStatement(stmt);
           if (!ptr) {
@@ -71,28 +116,16 @@ var initSqlJs = function (moduleConfig) {
           }
           const data = asm.moduleData(ptr);
           const size = asm.moduleSize(ptr);
-          const memory = asm.memory;
-          const stackSave = asm.stackSave;
-          const stackAlloc = asm.stackAlloc;
-          const stackRestore = asm.stackRestore;
-          const __indirect_function_table = asm.__indirect_function_table;
-
-          const bytes = memory.buffer.slice(data, data + size);
+          const bytes = asm.memory.buffer.slice(data, data + size);
           asm.freeModule(ptr);
 
           if (saveFileName){
             arrayBufferToBase64(bytes, saveFileName);
           }
 
-          const mod = new WebAssembly.Module(bytes);
-          const imports = { env: { 
-            memory, 
-            __indirect_function_table, 
-            stackSave, 
-            stackAlloc, 
-            stackRestore 
-          } };
-          new WebAssembly.Instance(mod, imports);
+          const mod = await WebAssembly.compile(bytes);
+          const imports = { env: genImportEnv(asm) };
+          await WebAssembly.instantiate(mod, imports);
         }
 
         Module['postRun'] = Module['postRun'] || [];

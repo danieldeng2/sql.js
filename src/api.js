@@ -322,7 +322,7 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
     * @throws {String} SQLite Error
     */
 
-    Statement.prototype["jit"] = function jit(saveFileName = null) {
+    Statement.prototype["jit"] = async function jit(saveFileName = null) {
         Module.jitStatement(this.stmt, saveFileName);
     }
 

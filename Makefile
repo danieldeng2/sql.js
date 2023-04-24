@@ -63,7 +63,7 @@ EMFLAGS_DEBUG = \
 	-g \
 	-O1
 
-BITCODE_FILES = out/sqlite3.o out/extension-functions.o out/compiler.o out/runtime.o out/operations.o out/analysis.o
+BITCODE_FILES = out/sqlite3.o out/extension-functions.o out/compiler.o out/runtime.o out/operations.o out/utils.o out/inMemorySort.o
 
 OUTPUT_WRAPPER_FILES = src/shell-pre.js src/shell-post.js
 
@@ -168,7 +168,11 @@ out/operations.o: $(SQLITE_SRC_PATH)/vdbeJIT/operations.cc
 	mkdir -p out
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
-out/analysis.o: $(SQLITE_SRC_PATH)/vdbeJIT/analysis.cc
+out/utils.o: $(SQLITE_SRC_PATH)/vdbeJIT/utils.cc
+	mkdir -p out
+	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
+
+out/inMemorySort.o: $(SQLITE_SRC_PATH)/vdbeJIT/inMemorySort.c
 	mkdir -p out
 	$(EMCC) $(SQLITE_COMPILATION_FLAGS) -I$(SQLITE_SRC_PATH) -I$(SQLITE_BUILD_PATH) -c $^ -o $@
 
