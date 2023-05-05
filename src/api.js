@@ -123,6 +123,7 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
         ["number", "string"]
     );
     var sqlite3_step = cwrap("sqlite3_step", "number", ["number"]);
+    var trace_statement = cwrap("traceStatement", "", ["number"]);
     var sqlite3_errmsg = cwrap("sqlite3_errmsg", "string", ["number"]);
     var sqlite3_column_count = cwrap(
         "sqlite3_column_count",
@@ -324,6 +325,10 @@ Module["onRuntimeInitialized"] = function onRuntimeInitialized() {
 
     Statement.prototype["jit"] = function jit(saveFileName = null) {
         Module.jitStatement(this.stmt, saveFileName);
+    }
+
+    Statement.prototype["trace"] = function trace() {
+        trace_statement(this.stmt);
     }
 
     Statement.prototype["bind"] = function bind(values) {

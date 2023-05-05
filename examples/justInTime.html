@@ -36,6 +36,7 @@
         const db = new SQL.Database(Uints);
         const stmt = db.prepare(queries["Query 18"]);
         outputTableBodyElem.innerHTML = "";
+        // stmt.trace();
         stmt.jit();
         while (stmt.step()) {
           const columnNames = stmt.getColumnNames();
@@ -43,6 +44,7 @@
           outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');
           outputTableBodyElem.innerHTML += `<tr>${valconcat(row, 'td')}</tr>`;
         };
+        // stmt.jit();
       }
       r.readAsArrayBuffer(f);
     }
