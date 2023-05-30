@@ -16,6 +16,15 @@
     return open + vals.join(close + open) + close;
   }
 
+  function benchmarked(stmt, outputTableHeadElem, outputTableBodyElem) {
+    while (stmt.step()) {
+      const columnNames = stmt.getColumnNames();
+      const row = stmt.get();
+      outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');
+      outputTableBodyElem.innerHTML += `<tr>${valconcat(row, 'td')}</tr>`;
+    };
+  }
+
   window.onload = async () => {
     const dbFileElm = document.getElementById('dbfile');
     const outputElm = document.getElementById('output');
@@ -34,20 +43,14 @@
       r.onload = function () {
         const Uints = new Uint8Array(r.result);
         const db = new SQL.Database(Uints);
-        const stmt = db.prepare(queries["Query 1"]);
+        const stmt = db.prepare(queries["Query 6"]);
         // const stmt = db.prepare(`Select 1+1;`);
         outputTableBodyElem.innerHTML = "";
         stmt.trace();
-        while (stmt.step()) {};        
+        while (stmt.step()) { };
         stmt.reset();
         stmt.jit();
-
-        while (stmt.step()) {
-          const columnNames = stmt.getColumnNames();
-          const row = stmt.get();
-          outputTableHeadElem.innerHTML = valconcat(columnNames, 'th');
-          outputTableBodyElem.innerHTML += `<tr>${valconcat(row, 'td')}</tr>`;
-        };
+        benchmarked(stmt, outputTableHeadElem, outputTableBodyElem);
       }
       r.readAsArrayBuffer(f);
     }
