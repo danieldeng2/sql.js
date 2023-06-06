@@ -45,10 +45,10 @@
         const db = new SQL.Database(Uints);
         const stmt = db.prepare(queries["Query 6"]);
         // const stmt = db.prepare(`Select 1+1;`);
+        // const stmt = db.prepare(`select L_QUANTITY, L_DISCOUNT from lineitem limit 10;`);
         outputTableBodyElem.innerHTML = "";
         stmt.trace();
         while (stmt.step()) { };
-        stmt.reset();
         stmt.jit();
         benchmarked(stmt, outputTableHeadElem, outputTableBodyElem);
       }
