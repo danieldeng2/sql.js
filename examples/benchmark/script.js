@@ -30,9 +30,9 @@ function measureQuery(dbFile, queryName, useJIT) {
   const db = new SQL.Database(dbFile);
   const stmt = db.prepare(queries[queryName]);
 
-  if (useJIT) stmt.jit();
 
   const startTime = new Date();
+  if (useJIT) stmt.jit();
   while (stmt.step()) { };
   const endTime = new Date();
 
@@ -52,11 +52,9 @@ executeButton.onclick = () => {
     outputTableHeadElem.innerHTML = valconcat(["Query", "Reference Time", "JIT Time"], 'th');
     const dbFile = new Uint8Array(r.result);
 
-    for (const query in queries) {
-      const referenceTime = measureQuery(dbFile, query, false) + "ms";
-      const jitTime = measureQuery(dbFile, query, true) + "ms";
-      outputTableBodyElem.innerHTML += `<tr>${valconcat([query, referenceTime, jitTime], 'td')}</tr>`;
-      await sleep(1);
-    }
+    const query = queries["Query 6"];
+    const jitTime = measureQuery(dbFile, query, true);
+    const referenceTime = measureQuery(dbFile, query, false);
+    outputTableBodyElem.innerHTML += `<tr>${valconcat([query, referenceTime, jitTime], 'td')}</tr>`;
   }
 }
