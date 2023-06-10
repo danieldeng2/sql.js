@@ -37,7 +37,7 @@
       r.onload = function () {
         const Uints = new Uint8Array(r.result);
         const db = new SQL.Database(Uints);
-        const stmt = db.prepare(queries["Query 6"]);
+        const stmt = db.prepare(queries["Query 9"]);
         outputTableBodyElem.innerHTML = "";
         stmt.jit();
         while (stmt.step()) {

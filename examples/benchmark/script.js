@@ -20,10 +20,12 @@ const queries = {
   "Query 3": "select l_orderkey, sum(l_extendedprice *(1 - l_discount)) as revenue, o_orderdate, o_shippriority from customer, orders, lineitem where c_mktsegment = 'BUILDING' and c_custkey = o_custkey and l_orderkey = o_orderkey and o_orderdate < date('1995-03-15') and l_shipdate > date('1995-03-15') group by l_orderkey, o_orderdate, o_shippriority order by revenue desc, o_orderdate;",
   "Query 9": `select nation, o_year, sum(amount) as sum_profit from ( select n_name as nation, cast(strftime("%Y", date(l_shipdate)) as integer) as o_year, l_extendedprice * (1 - l_discount) - ps_supplycost * l_quantity as amount from part, supplier, lineitem, partsupp, orders, nation where s_suppkey = l_suppkey and ps_suppkey = l_suppkey and ps_partkey = l_partkey and p_partkey = l_partkey and o_orderkey = l_orderkey and s_nationkey = n_nationkey and p_name like '%green%' ) as profit group by nation, o_year order by nation, o_year desc;`,
   "Query 18": "select c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice, sum(l_quantity) from customer, orders, lineitem where o_orderkey in ( select l_orderkey from lineitem group by l_orderkey having sum(l_quantity) > 300 ) and c_custkey = o_custkey and o_orderkey = l_orderkey group by c_name, c_custkey, o_orderkey, o_orderdate, o_totalprice order by o_totalprice desc, o_orderdate;",
-  "sort": "SELECT 1 FROM PART ORDER BY P_SIZE;",
-  "join": "SELECT * FROM NATION JOIN SUPPLIER;",
-  "sum integer": "SELECT sum(L_QUANTITY) FROM LINEITEM group by l_returnflag;",
-  "sum real": "SELECT sum(L_EXTENDEDPRICE) FROM LINEITEM group by l_returnflag;",
+  "Select All": "SELECT * FROM LINEITEM;",
+  "Compare Integer": "SELECT * FROM LINEITEM WHERE L_QUANTITY < 25;",
+  "Compare Date": "SELECT * FROM LINEITEM WHERE L_RECEIPTDATE < DATE('L_RECEIPTDATE');",
+  "Join": "SELECT * FROM CUSTOMER JOIN NATION;",
+  "Sum Integer": "SELECT sum(L_QUANTITY) FROM LINEITEM group by l_returnflag;",
+  "Sum Real": "SELECT sum(L_EXTENDEDPRICE) FROM LINEITEM group by l_returnflag;",
 }
 
 async function sleep(ms) {
@@ -56,7 +58,7 @@ executeButton.onclick = () => {
     outputTableHeadElem.innerHTML = valconcat(["Query", "Reference Time", "JIT Time"], 'th');
     const dbFile = new Uint8Array(r.result);
 
-    const query = "sum integer";
+    const query = "Compare Date";
     const jitTime = measureQuery(dbFile, query, true);
     const referenceTime = measureQuery(dbFile, query, false);
     outputTableBodyElem.innerHTML += `<tr>${valconcat([query, referenceTime, jitTime], 'td')}</tr>`;
